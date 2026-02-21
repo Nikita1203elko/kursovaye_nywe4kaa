@@ -29,7 +29,7 @@ namespace Kursovaya
         /// Required method for Designer support - do not modify
         /// the contents of this method with the code editor.
         /// </summary>
-        public void InitializeComponent()
+        private void InitializeComponent()
         {
             this.panel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.noneRequest = new System.Windows.Forms.Label();
@@ -63,7 +63,6 @@ namespace Kursovaya
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
             this.Name = "MyRequestsForm";
             this.Text = "Мои заявки";
-            this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
         }
 

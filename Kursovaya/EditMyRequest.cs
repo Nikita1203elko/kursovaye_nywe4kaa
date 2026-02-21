@@ -10,12 +10,14 @@ namespace Kursovaya
     {
         public int requestId2;
         public string description2;
-        public EditMyRequest(string requestDescription, int requestId)
+        private MyRequestsForm frm_myrequestsForm;
+        public EditMyRequest(string requestDescription, int requestId, MyRequestsForm parrentForm)
         {
             
             InitializeComponent();
             description2 = requestDescription;
             requestId2 = requestId;
+            frm_myrequestsForm = parrentForm;
         }
 
         private void EditMyRequest_Load(object sender, EventArgs e)
@@ -28,25 +30,33 @@ namespace Kursovaya
             using (SqlConnection conn = new SqlConnection(Properties.Settings.Default.bd_connect))
             {
                 conn.Open();
-                using (SqlCommand cmd = new SqlCommand("UpdateDescRequest",conn))
+                using (SqlCommand cmd = new SqlCommand("UpdateDescRequest", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@description", textBox1.Text);
                     cmd.Parameters.AddWithValue("@requestId", requestId2);
-                    cmd.ExecuteNonQuery();
+                    int rows = cmd.ExecuteNonQuery();
+
+                    if (rows == 0)
+                    {
+                        MessageBox.Show("Заявка не найдена или удалена");
+                        return;
+                    }
                     
                     
+                    if (this.Parent is Panel p)
+                    {
+                        p.Controls.Remove(this);
+                    }
+
+                    frm_myrequestsForm?.LoadRequests();
+                    this.Close();
                 }
-                
-                
-                this.DialogResult = DialogResult.OK;
-                MessageBox.Show("Заявка изменена, но для того чтобы данные поменялись нужно закрыть эту форму, удачи!");
-                this.Hide();
-                
-                Form frm  = new MyRequestsForm();
-                frm.LoadRequests()
+
+               
 
             }
+            MessageBox.Show("Заявка изменена");
         }
     }
 }

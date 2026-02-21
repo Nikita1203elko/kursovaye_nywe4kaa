@@ -19,7 +19,8 @@ namespace Kursovaya
         string date_form;
         string status_form;
         
-        public RequestForm(string text_id,string date,string description,string status, int requestid)
+        private MyRequestsForm frm_myrequestsForm;
+        public RequestForm(string text_id,string date,string description,string status, int requestid, MyRequestsForm parentForm)
         {
             InitializeComponent();
             requestId_form = requestid;
@@ -28,6 +29,7 @@ namespace Kursovaya
             date_form = date;
             status_form = status;
             load_form();
+            frm_myrequestsForm = parentForm;
         }
         
         private void load_form()
@@ -56,32 +58,46 @@ namespace Kursovaya
 
         private void отменитьToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            using (SqlConnection conn = new SqlConnection(Properties.Settings.Default.bd_connect))
+            try
             {
-                conn.Open();
+                using (var conn = new SqlConnection(Properties.Settings.Default.bd_connect))
+                {
+                    conn.Open();
+                    using (var cmd = new SqlCommand("cancel_statusRequest", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@requestId", requestId_form);
+                        int rows = cmd.ExecuteNonQuery();
 
+                        if (rows == 0)
+                        {
+                            MessageBox.Show("Заявка не найдена или уже отменена");
+                            return;
+                        }
+                    }
+                }
+                MessageBox.Show("Статус изменён");
+                
+                if (this.Parent is Panel p)
+                {
+                    p.Controls.Remove(this);
+                }
 
-
-                SqlCommand cmd = new SqlCommand("cancel_statusRequest", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@requestId", requestId_form);
-                cmd.ExecuteNonQuery();
-                StatusRequest_lb.ForeColor = Color.Red;
-                this.Hide();
-
-
+                frm_myrequestsForm?.LoadRequests();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка при отмене:\n" + ex.Message);
             }
         }
 
         private void редактироватьToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            using (var frm = new EditMyRequest(description_form, requestId_form))
+            using (var frm = new EditMyRequest(description_form, requestId_form,frm_myrequestsForm))
             {
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
-                    Form form = new MyRequestsForm();
-
-                    frm.Hide();
+                    frm_myrequestsForm.LoadRequests();
                 }
             }
         }
