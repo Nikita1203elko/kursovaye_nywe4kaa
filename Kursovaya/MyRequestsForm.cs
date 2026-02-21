@@ -1,0 +1,73 @@
+﻿using System;
+using System.Data;
+using System.Data.SqlClient;
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace Kursovaya
+{
+    public partial class MyRequestsForm : Form
+    {
+        public MyRequestsForm()
+        {
+            InitializeComponent();
+        }
+        
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            LoadRequests();
+        }
+        
+        public void LoadRequests()
+        {
+            try
+            {
+
+                using (SqlConnection conn = new SqlConnection(Properties.Settings.Default.bd_connect))
+                {
+                    conn.Open();
+                    
+                    
+
+                    SqlCommand cmd = new SqlCommand("GetListRequest", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@user_id", CurrentUser.userId);
+                    
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    if (!reader.HasRows)
+                    {
+                        noneRequest.Visible = true;
+                    }
+                    else
+                    {
+                        while (reader.Read())
+                        {
+
+                            string text_id = $"Заявка №{reader["requestId"]}";
+                            int requestid = Convert.ToInt32(reader["requestId"]);
+                            string date = $"Дата: {Convert.ToDateTime(reader["createdData"]):HH:mm - dd.MM.yyyy}";
+                            string desc = reader["faultDescription"].ToString();
+
+                            string status = reader["repairStatusName"].ToString().ToLower();
+                        
+                            RequestForm rf = new RequestForm(text_id, date, desc, status, requestid);
+                            panel1.Controls.Add(rf);
+                            
+                        
+                        }
+                    }
+                    
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при загрузке: {ex.Message}", "Ошибка", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+    }
+}
+
+
+
